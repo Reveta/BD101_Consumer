@@ -11,15 +11,9 @@ import org.apache.spark.sql._
 
 object SparkJob {
 
+  private val csvPath = "hdfs://sandbox-hdp.hortonworks.com:8020/homework/streaming"
 
-  private var csvPath = "hdfs://sandbox-hdp.hortonworks.com:8020/homework/streaming"
-  def sparkJob() {
-
-    val spark: SparkSession = SparkSession
-      .builder()
-      .master("local")
-      .getOrCreate()
-
+  def sparkJob(spark: SparkSession) {
     val fsConf = new Configuration()
     fsConf.set("fs.hdfs.impl", classOf[DistributedFileSystem].getName)
     fsConf.set("fs.file.impl", classOf[LocalFileSystem].getName)
@@ -32,8 +26,8 @@ object SparkJob {
     var dataFrameKafkaRecords: DataFrame = spark
       .readStream
       .format("kafka")
-      .option("kafka.bootstrap.servers", "sandbox-hdp.hortonworks.com:6667")
-      .option("subscribe", Consumer.topic)
+      .option("kafka.bootstrap.servers", Main.brokers)
+      .option("subscribe", Main.topic)
       .load()
 
     val value: StreamingQuery = dataFrameKafkaRecords.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
